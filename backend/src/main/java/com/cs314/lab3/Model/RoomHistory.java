@@ -8,18 +8,16 @@ public class RoomHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-    private long roomId;
-    private long userId;
+    private long roomUserId;
     private String date;
     private String text;
 
     public RoomHistory() {
     }
 
-    public RoomHistory(long id, long roomId, long userId, String date, String text) {
+    public RoomHistory(long id, long roomUserId, String date, String text) {
         this.id = id;
-        this.roomId = roomId;
-        this.userId = userId;
+        this.roomUserId = roomUserId;
         this.date = date;
         this.text = text;
     }
@@ -32,20 +30,12 @@ public class RoomHistory {
         this.id = id;
     }
 
-    public long getRoomId() {
-        return roomId;
+    public long getRoomUserId() {
+        return roomUserId;
     }
 
-    public void setRoomId(long roomId) {
-        this.roomId = roomId;
-    }
-
-    public long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(long userId) {
-        this.userId = userId;
+    public void setRoomUserId(long roomUserId) {
+        this.roomUserId = roomUserId;
     }
 
     public String getDate() {

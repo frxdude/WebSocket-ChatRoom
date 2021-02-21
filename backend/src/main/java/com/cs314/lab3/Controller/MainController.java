@@ -43,15 +43,15 @@ public class MainController {
 
     @PostMapping("/join")
     public ResponseEntity<?> join(@RequestBody JoinDTO joinDTO){
-        User theUser = userRepo.findByUsername(joinDTO.getUsername());
-        JoinReturnDTO responseData = new JoinReturnDTO();
-        if(theUser != null)
-        {
-            responseData.setLoggedIn(true);
-            responseData.setUser(theUser);
-            return new ResponseEntity<>(responseData, HttpStatus.OK);
-        }
-        responseData.setLoggedIn(false);
-        return new ResponseEntity<>(responseData, HttpStatus.OK);
+//        User theUser = userRepo.findByUsername(joinDTO.getUsername());
+//        JoinReturnDTO responseData = new JoinReturnDTO();
+//        if(theUser != null)
+//        {
+//            responseData.setLoggedIn(true);
+//            responseData.setUser(theUser);
+//            return new ResponseEntity<>(responseData, HttpStatus.OK);
+//        }
+//        responseData.setLoggedIn(false);
+        return new ResponseEntity<>(true, HttpStatus.OK);
     }
 }
