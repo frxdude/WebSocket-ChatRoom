@@ -9,17 +9,17 @@ public class RoomUser {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     private long roomId;
-    private long userId;
     private String joinedDate;
+    private String username;
 
     public RoomUser() {
     }
 
-    public RoomUser(long id, long roomId, long userId, String joinedDate) {
+    public RoomUser(long id, long roomId, String joinedDate, String username) {
         this.id = id;
         this.roomId = roomId;
-        this.userId = userId;
         this.joinedDate = joinedDate;
+        this.username = username;
     }
 
     public long getId() {
@@ -38,19 +38,19 @@ public class RoomUser {
         this.roomId = roomId;
     }
 
-    public long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(long userId) {
-        this.userId = userId;
-    }
-
     public String getJoinedDate() {
         return joinedDate;
     }
 
     public void setJoinedDate(String joinedDate) {
         this.joinedDate = joinedDate;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

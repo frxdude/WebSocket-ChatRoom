@@ -9,14 +9,14 @@ package com.cs314.lab3.DTO;
 
 public class JoinDTO {
     private String username;
-    private long roomId;
+    private String roomName;
 
     public JoinDTO() {
     }
 
-    public JoinDTO(String username, long roomId) {
+    public JoinDTO(String username, String roomName) {
         this.username = username;
-        this.roomId = roomId;
+        this.roomName = roomName;
     }
 
     public String getUsername() {
@@ -27,11 +27,11 @@ public class JoinDTO {
         this.username = username;
     }
 
-    public long getRoomId() {
-        return roomId;
+    public String getRoomName() {
+        return roomName;
     }
 
-    public void setRoomId(long roomId) {
-        this.roomId = roomId;
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
     }
 }

@@ -13,4 +13,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
+    public Room findByRoomName(String roomName);
 }

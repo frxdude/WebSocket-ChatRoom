@@ -7,18 +7,18 @@
  */
 package com.cs314.lab3.DTO;
 
-import com.cs314.lab3.Model.User;
-
 public class JoinReturnDTO {
     private boolean loggedIn;
-    private User user;
+    private int messageCode;
+    private boolean hasPassword;
 
     public JoinReturnDTO() {
     }
 
-    public JoinReturnDTO(boolean loggedIn, User user) {
+    public JoinReturnDTO(boolean loggedIn, int messageCode, boolean hasPassword) {
         this.loggedIn = loggedIn;
-        this.user = user;
+        this.messageCode = messageCode;
+        this.hasPassword = hasPassword;
     }
 
     public boolean isLoggedIn() {
@@ -29,11 +29,19 @@ public class JoinReturnDTO {
         this.loggedIn = loggedIn;
     }
 
-    public User getUser() {
-        return user;
+    public int getMessageCode() {
+        return messageCode;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setMessageCode(int messageCode) {
+        this.messageCode = messageCode;
+    }
+
+    public boolean isHasPassword() {
+        return hasPassword;
+    }
+
+    public void setHasPassword(boolean hasPassword) {
+        this.hasPassword = hasPassword;
     }
 }
