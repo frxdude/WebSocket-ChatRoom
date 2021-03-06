@@ -15,9 +15,6 @@ public interface RoomUserRepository extends JpaRepository<RoomUser, Long> {
             "SELECT * FROM room_users WHERE room_id = :roomId " +
                     "AND username = :username";
 
-    public RoomUser findByRoomId(long roomId);
-    public List<RoomUser> findByUsername(String username);
-
     @Query(value = IS_AvailableToJoin, nativeQuery = true)
     public RoomUser isAvailableToJoin(@Param("username") String username, @Param("roomId") long roomId);
 

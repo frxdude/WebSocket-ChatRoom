@@ -9,16 +9,18 @@ package com.cs314.lab3.DTO;
 
 public class JoinReturnDTO {
     private boolean loggedIn;
-    private int messageCode;
     private boolean hasPassword;
+    private int messageCode;
+    private String message;
 
     public JoinReturnDTO() {
     }
 
-    public JoinReturnDTO(boolean loggedIn, int messageCode, boolean hasPassword) {
+    public JoinReturnDTO(boolean loggedIn, int messageCode, boolean hasPassword, String message) {
         this.loggedIn = loggedIn;
         this.messageCode = messageCode;
         this.hasPassword = hasPassword;
+        this.message = message;
     }
 
     public boolean isLoggedIn() {
@@ -43,5 +45,13 @@ public class JoinReturnDTO {
 
     public void setHasPassword(boolean hasPassword) {
         this.hasPassword = hasPassword;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

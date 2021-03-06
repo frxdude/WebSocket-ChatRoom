@@ -1,6 +1,4 @@
-import React, { Component } from 'react';
-import Typography from '@material-ui/core/Typography';
-import history from "../history.js";
+import React from 'react';
 
 const Watermark = () => {
     return ( 

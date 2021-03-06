@@ -10,6 +10,7 @@ package com.cs314.lab3.Controller;
 import com.cs314.lab3.DTO.CreateRoomDTO;
 import com.cs314.lab3.DTO.JoinDTO;
 import com.cs314.lab3.DTO.JoinReturnDTO;
+import com.cs314.lab3.DTO.PassCheckDTO;
 import com.cs314.lab3.Model.ChatMessage;
 import com.cs314.lab3.Model.Room;
 import com.cs314.lab3.Model.RoomUser;
@@ -18,8 +19,10 @@ import com.cs314.lab3.Repository.RoomUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +31,6 @@ import java.time.format.DateTimeFormatter;
 
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
-@RequestMapping(path = "/chat")
 public class MainController {
     @Autowired
     RoomRepository roomRepo;
@@ -38,37 +40,42 @@ public class MainController {
     public static final int ROOM_CREATED = 1; // tested
     public static final int ROOM_DOESNT_EXIST = 2; // tested
     public static final int ROOM_ALREADY_EXISTS = 3; // tested
-    public static final int USER_ALREADY_EXISTS = 4; // tested
-    public static final int NEW_USER = 5; // tested
-    public static final int ROOM_DELETED = 6; // tested
-    public static final int ROOM_DOESNT_FOUND = 7; // tested
+    public static final int ROOM_DELETED = 4; // tested
+    public static final int ROOM_NOT_FOUND = 5; // tested
+    public static final int ROOM_PASSWORD_INCORRECT = 6; // tested
+    public static final int USER_ALREADY_EXISTS = 7; // tested
+    public static final int NEW_USER = 8; // tested
 
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     LocalDateTime now = LocalDateTime.now();
 
-    @MessageMapping("/register")
-//    @SendTo("/cs314/public")
-    public ChatMessage register(@Payload ChatMessage ch, SimpMessageHeaderAccessor headerAccessor) {
+    @MessageMapping("/register/{roomName}")
+    @SendTo("/cs314/{roomName}")
+    public ChatMessage register(@Payload ChatMessage ch, SimpMessageHeaderAccessor headerAccessor
+            ,@DestinationVariable String roomName) {
         headerAccessor.getSessionAttributes().put("username", ch.getSender());
         return ch;
     }
 
-    @MessageMapping("/send")
-//    @SendTo("/cs314/public")
-    public ChatMessage sendMessage(@Payload ChatMessage ch) {
+    @MessageMapping("/send/{roomName}")
+    @SendTo("/cs314/{roomName}")
+    public ChatMessage sendMessage(@Payload ChatMessage ch, @DestinationVariable String roomName) {
+        System.out.println("my message is here " + ch.getContent());
         return ch;
     }
 
-    @DeleteMapping("/room/{roomId}")
-    public ResponseEntity<?> deleteRoom(@PathVariable long roomId) {
-        Room tempRoom = roomRepo.findById(roomId).orElse(null);
+    @DeleteMapping("/room/{roomName}")
+    public ResponseEntity<?> deleteRoom(@PathVariable String roomName) {
+        Room tempRoom = roomRepo.findByRoomName(roomName);
         JoinReturnDTO responseData = new JoinReturnDTO();
         if (tempRoom != null) {
             roomRepo.delete(tempRoom);
+            responseData.setMessage("Room deleted");
             responseData.setMessageCode(ROOM_DELETED);
             return new ResponseEntity<>(responseData, HttpStatus.OK);
         }
-        responseData.setMessageCode(ROOM_DOESNT_FOUND);
+        responseData.setMessage("Room not found");
+        responseData.setMessageCode(ROOM_NOT_FOUND);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 
@@ -77,6 +84,7 @@ public class MainController {
         JoinReturnDTO responseData = new JoinReturnDTO();
         if (roomRepo.findByRoomName(body.getRoomName()) != null) {
             responseData.setLoggedIn(false);
+            responseData.setMessage("Room already exists");
             responseData.setMessageCode(ROOM_ALREADY_EXISTS);
             return new ResponseEntity<>(responseData, HttpStatus.OK);
         }
@@ -97,7 +105,10 @@ public class MainController {
         room1.setCreatedUserId(roomUser.getId());
         roomRepo.save(room);
 
+        if(room1.getRoomPassword() != "" && room1.getRoomPassword() != null)
+            responseData.setHasPassword(true);
         responseData.setLoggedIn(true);
+        responseData.setMessage("Room created");
         responseData.setMessageCode(ROOM_CREATED);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
@@ -110,6 +121,7 @@ public class MainController {
         Room tempRoom = roomRepo.findByRoomName(roomName);
 
         if (tempRoom == null) {
+            responseData.setMessage("Room doesn't exist");
             responseData.setMessageCode(ROOM_DOESNT_EXIST);
             responseData.setLoggedIn(false);
             return new ResponseEntity<>(responseData, HttpStatus.OK);
@@ -119,9 +131,25 @@ public class MainController {
 
         RoomUser rous = roomUserRepo.isAvailableToJoin(username, roomId);
         if (rous != null) {
+            responseData.setMessage("User already exists");
             responseData.setMessageCode(USER_ALREADY_EXISTS);
             responseData.setLoggedIn(false);
             return new ResponseEntity<>(responseData, HttpStatus.OK);
+        }
+
+        String tempPasswordCheck = tempRoom.getRoomPassword();
+        if(tempPasswordCheck != "" && tempPasswordCheck != null)
+        {
+            Room tempRoomCheck = roomRepo.isPasswordCorrect(joinDTO.getPassword(),roomId);
+            if(tempRoomCheck == null)
+            {
+                responseData.setHasPassword(true);
+                responseData.setLoggedIn(false);
+                responseData.setMessage("Incorrect Password");
+                responseData.setMessageCode(ROOM_PASSWORD_INCORRECT);
+                return new ResponseEntity<>(responseData, HttpStatus.OK);
+            }
+
         }
 
         RoomUser newRoomUser = new RoomUser();
@@ -130,13 +158,9 @@ public class MainController {
         newRoomUser.setRoomId(roomId);
         roomUserRepo.save(newRoomUser);
 
-        String tempPasswordCheck = tempRoom.getRoomPassword();
-        if(tempPasswordCheck != ""  || tempPasswordCheck != null)
-            responseData.setHasPassword(true);
+        responseData.setMessage("New User");
         responseData.setMessageCode(NEW_USER);
         responseData.setLoggedIn(true);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
-//    @PostMapping("/joinWithPassword")
-//    public ResponseEntity<?> joinWithPassword
 }

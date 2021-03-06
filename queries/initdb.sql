@@ -16,7 +16,7 @@ DROP TABLE room_users;
 DROP TABLE room_history;
 DROP TABLE rooms;
 
-
+UPDATE rooms SET id = 1 WHERE created_user_id=100;
 -- Testing --
 SELECT * FROM room_users WHERE room_id = (SELECT id FROM rooms WHERE room_name = 'hi') AND (SELECT id FROM lab3.users WHERE username = 'hi') = 1;
 INSERT INTO users(id,username) VALUES(1,'B180910040');

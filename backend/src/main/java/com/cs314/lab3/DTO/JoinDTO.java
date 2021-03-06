@@ -10,13 +10,15 @@ package com.cs314.lab3.DTO;
 public class JoinDTO {
     private String username;
     private String roomName;
+    private String password;
 
     public JoinDTO() {
     }
 
-    public JoinDTO(String username, String roomName) {
+    public JoinDTO(String username, String roomName, String password) {
         this.username = username;
         this.roomName = roomName;
+        this.password = password;
     }
 
     public String getUsername() {
@@ -33,5 +35,13 @@ public class JoinDTO {
 
     public void setRoomName(String roomName) {
         this.roomName = roomName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

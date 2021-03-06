@@ -8,11 +8,20 @@
 package com.cs314.lab3.Model;
 
 public class ChatMessage {
+    private String room;
     private String content;
     private String sender;
     private MessageType type;
     public enum MessageType {
         CHAT,JOIN,LEAVE
+    }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
     }
 
     public String getContent() {

@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
 import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import history from '../history.js'
 import Watermark from '../components/WaterMark.js'
-import { StarRateSharp } from '@material-ui/icons';
+import Modal from '@material-ui/core/Modal';
+import Backdrop from '@material-ui/core/Backdrop';
+import Fade from '@material-ui/core/Fade';
+import axios from 'axios';
+import connect from '../helper/Sock.js'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -28,11 +29,22 @@ const useStyles = makeStyles((theme) => ({
     backgroundSize: 'cover',
     backgroundPosition: 'center',
   },
+  modal: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   paper: {
     margin: theme.spacing(8, 4),
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+  },
+  paper1: {
+    backgroundColor: theme.palette.background.paper,
+    border: '2px solid #000',
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(2, 4, 3),
   },
   avatar: {
     margin: theme.spacing(1),
@@ -49,11 +61,18 @@ const useStyles = makeStyles((theme) => ({
 
 export default function LoginScreen(props) {
   const classes = useStyles();
+  const [open, setOpen] = React.useState(false);
+
+  const handleModal = (value) => {
+    setOpen(value);
+  };
+
 
   const [values, setValues] = useState(
     {
       username: "",
-      roomId: ""
+      roomName: "",
+      password: ""
     }
   );
 
@@ -65,10 +84,27 @@ export default function LoginScreen(props) {
   };
 
   const loginHandle = () => {
-    if(values.roomId == 21 && values.username == "frx")
-    {
-      history.push('/MainScreen', values);
-    }
+    axios
+    .post(
+      '/join',
+      values,
+      {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json;charset=UTF-8',
+        },
+      },
+    )
+    .then(response => {
+      if(response.data.messageCode == 8)
+        history.push('/MainScreen', values);
+      else if(response.data.hasPassword === true)
+        handleModal(true);
+      console.log(response.data);
+    })
+    .catch(error => {
+      console.log(error);
+    });
   }
 
   return (
@@ -81,7 +117,7 @@ export default function LoginScreen(props) {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            Нэвтрэх
+            Chathouse
           </Typography>
           <form className={classes.form} noValidate>
             <TextField
@@ -89,10 +125,10 @@ export default function LoginScreen(props) {
               margin="normal"
               required
               fullWidth
-              label="Өрөөний дугаар"
-              name="roomId"
+              label="Өрөөний нэр"
+              name="roomName"
               autoFocus
-              value={values.roomId}
+              value={values.roomname}
               onChange={handleValues}
             />
             <TextField
@@ -106,14 +142,14 @@ export default function LoginScreen(props) {
               onChange={handleValues}
             />
             <Button
-              type="submit"
+              // type="submit"
               fullWidth
               variant="contained"
               color="primary"
               className={classes.submit}
               onClick={loginHandle}
             >
-              Үргэлжлүүлэх
+              Харилцах
             </Button>
             <Grid container>
               <Grid item>
@@ -125,6 +161,45 @@ export default function LoginScreen(props) {
           </form>
         </div>
       </Grid>
+      <Modal
+        aria-labelledby="transition-modal-title"
+        aria-describedby="transition-modal-description"
+        className={classes.modal}
+        open={open}
+        onClose={() => handleModal(false)}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={open}>
+          <div className={classes.paper1}>
+            <h2 id="transition-modal-title">Тухайн өрөө нь нууц үгээр хамгаалагдсан байна.</h2>
+            <TextField
+              variant="outlined"
+              margin="normal"
+              type="password"
+              required
+              fullWidth
+              label="Өрөөний нууц үг"
+              name="password"
+              value={values.password}
+              onChange={handleValues}
+            />
+            <Button
+              // type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              className={classes.submit}
+              onClick={loginHandle}
+            >
+              Confirm
+            </Button>
+          </div>
+        </Fade>
+      </Modal>
       <Watermark/>
     </Grid>
   );
