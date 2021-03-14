@@ -1,10 +1,16 @@
 import React, {useState, useEffect} from 'react';
 
 const MyMessage = (props) => {
+    const [recentSender, setRecentSender] = useState("");
+    useEffect(()=>{
+        setRecentSender(props.sender);
+    });
     return ( 
         <div style={{display:"flex",flexDirection: "column", float:"right",maxWidth:"40%", }}>
             {
-                props.recentSender != props.sender &&
+                console.log("Recent: ",recentSender),
+                console.log("now sender: ",props.sender),
+                recentSender != props.sender &&
                 <div style={styles.sender}>
                     {props.sender}
                 </div>

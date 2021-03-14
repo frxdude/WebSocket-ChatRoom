@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import SockJS from 'sockjs-client'; // Note this line
+import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 import MyMessage from '../components/MyMessage.js';
 import TheirMessage from '../components/TheirMessage.js';
-import JoinScreen from '../components/JoinScreen.js';
+// import JoinScreen from '../components/JoinScreen.js';
 import WaterMark from '../components/WaterMark.js';
+import history from '../history.js';
+import axios from 'axios';
 
 const socket = new SockJS('/B180910040');
 const stompClient = Stomp.over(socket);
@@ -15,8 +17,14 @@ const headers = {"Access-Control-Allow-Origin": "*",
 const MainScreen = (props) => {
     const {roomName, username} = (props.location && props.location.state) || {};
     const [text, setText] = useState("");
-    const [joined, setJoined] = useState(false);
-    const [messages, setMessages] = useState([]);
+    const [recentSender, setRecentSender] = useState("");
+    const [messages, setMessages] = useState([
+      {
+        sender: "System",
+        message: "hi"
+      }
+    ]);
+
     const handleValue = (e) => {
         setText(e.target.value);
     }
@@ -28,17 +36,39 @@ const MainScreen = (props) => {
             type: "CHAT" 
         }
         stompClient.send(`/lab3/send/${roomName}`, {}, JSON.stringify(data));
+        setRecentSender(username);
         setText("");
     }
     const handleLeave = () => {
-        var data = {
-            room: roomName,
-            sender: username,
-            content: text,
-            type: "LEAVE"
-        }
-        stompClient.send(`/lab3/send/${roomName}`, {}, JSON.stringify(data));
+        // var data = {
+        //     room: roomName,
+        //     sender: username,
+        //     content: text,
+        //     type: "LEAVE"
+        // }
+        // stompClient.send(`/lab3/send/${roomName}`, {}, JSON.stringify(data));
+        history.goBack();
+        // window.location.reload();
     }
+    useEffect(() => {
+      axios.get(
+        `/roomHistory/${roomName}`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json;charset=UTF-8',
+          },
+        },
+      )
+      .then(response => {
+        console.log(response.data);
+        setMessages(response.data);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+    },[]);
+
     useEffect(() => {
       let isMounted = true;
       if (isMounted)
@@ -84,25 +114,25 @@ const MainScreen = (props) => {
         console.log('close');
     };
     socket.onunhandledrejection = function() {
-      console.log("CANT CONNEC TO SOCKET");
+      console.log("CANT CONNECT TO SOCKET");
     }
     return (
         <div style={styles.container}>
-            room id: {roomName} 
+          <div style={{fontSize: 25, color: "red", textAlign: "center", backgroundColor: "yellow", width:"100%", height: 80, paddingTop:20}}>
+            room: {roomName}
+            <br/>
             username: {username}
-            {/* {
-              !joined && <JoinScreen setJoined={setJoined}/>
-            } */}
-            <div style={{flexDirection:"column",display:"flex", height: 525, overflowY: "scroll"}}>
+          </div>
+            <div style={{flexDirection:"column",display:"flex", height: 525, overflowY: "scroll", marginTop: 30}}>
             {
               messages.length > 0 && messages.map((item, key) => {
                 return(
                   <div key={key}>
                     {
                       (item.sender  == username)?
-                        <MyMessage message = {item.message}/>
+                        <MyMessage message = {item.message} sender={item.sender}/>
                         :
-                        <TheirMessage message = {item.message}/>
+                        <TheirMessage message = {item.message} sender={item.sender}/>
                     }
                   </div>
                 );
@@ -151,7 +181,9 @@ const MainScreen = (props) => {
  
 const styles = {
     container: {
-      paddingTop: 60,
+      // paddingTop: 60,
+    },
+    title: {
     },
     joinContainer: {
       height: "100vh",

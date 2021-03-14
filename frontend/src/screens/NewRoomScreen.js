@@ -3,7 +3,6 @@ import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
-import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
@@ -11,21 +10,15 @@ import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import history from '../history.js'
 import Watermark from '../components/WaterMark.js'
-import Modal from '@material-ui/core/Modal';
-import Backdrop from '@material-ui/core/Backdrop';
-import Fade from '@material-ui/core/Fade';
-import axios from 'axios';
 import MyAlert from '../components/MyAlert.js';
-import connect from '../helper/Sock.js'
-import { FormatListNumbered } from '@material-ui/icons';
-import { findAllByDisplayValue } from '@testing-library/dom';
+import axios from 'axios';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     height: '100vh',
   },
   image: {
-    backgroundImage: `url(https://techcrunch.com/wp-content/uploads/2020/03/getty-video-call-chat.jpg?w=1390&crop=1)`,
+    backgroundImage: `url(https://cdn.pocket-lint.com/assets/images/151711-apps-feature-best-zoom-backgrounds-fun-virtual-backgrounds-for-zoom-meetings-image1-5a8dysaweh.jpg)`,
     backgroundRepeat: 'no-repeat',
     backgroundColor:
       theme.palette.type === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
@@ -62,7 +55,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function LoginScreen(props) {
+export default function NewRoomScreen(props) {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [alert, setAlert] = useState({
@@ -70,16 +63,12 @@ export default function LoginScreen(props) {
     text: "",
     type: ""
   });
-
-  const handleModal = (value) => {
-    setOpen(value);
-  };
-
   const [values, setValues] = useState(
     {
       username: "",
       roomName: "",
-      password: ""
+      roomPassword: "",
+      userLimit: 10
     }
   );
 
@@ -100,11 +89,11 @@ export default function LoginScreen(props) {
       type: ""
     });
   };
-  
-  const loginHandle = () => {
+
+  const createHandle = () => {
     axios
     .post(
-      '/join',
+      '/room',
       values,
       {
         headers: {
@@ -113,7 +102,6 @@ export default function LoginScreen(props) {
         },
       },
     )
-
     // public static final int ROOM_CREATED = 1; // tested
     // public static final int ROOM_DOESNT_EXIST = 2; // tested
     // public static final int ROOM_ALREADY_EXISTS = 3; // tested
@@ -124,34 +112,21 @@ export default function LoginScreen(props) {
     // public static final int NEW_USER = 8; // tested
     .then(response => {
       var messageCode = response.data.messageCode;
-      if(messageCode == 8)
+      if(messageCode == 1)
+      {
         history.push('/MainScreen', values);
-      else if(response.data.hasPassword === true)
-        handleModal(true);
-      else if(messageCode == 2)
         setAlert({
-          text: "Ийм өрөө алга байна",
-          type: "warning",
+          text: "Амжилттай үүслээ",
+          type: "success",
           open: true,
         });
+      }
       else if(messageCode == 3)
         setAlert({
           text: "Ийм нэртэй өрөө аль хэдийн үүссэн байна",
           type: "info",
           open: true,
         });
-      else if(messageCode == 6)
-        setAlert({
-          text: "Нууц үг буруу байна",
-          type: "warning",
-          open: true,
-        });
-      else if(messageCode == 7)
-      setAlert({
-        text: "Ийм нэртэй хэрэглэгч аль хэдийн нэвтэрсэн байна",
-        type: "warning",
-        open: true,
-      });
       console.log(response.data);
     })
     .catch(error => {
@@ -180,7 +155,8 @@ export default function LoginScreen(props) {
               label="Өрөөний нэр"
               name="roomName"
               autoFocus
-              value={values.roomname}
+              // error ={values.roomName.length === 0 ? true : false }
+              value={values.roomName}
               onChange={handleValues}
             />
             <TextField
@@ -188,9 +164,22 @@ export default function LoginScreen(props) {
               margin="normal"
               required
               fullWidth
-              label="Нэвтрэх нэр"
-              name="username"
-              value={values.username}
+              label="Орох хүний дээд хязгаар"
+              name="userLimit"
+              // error ={values.userLimit.length === 0 ? true : false }
+              value={values.userLimit}
+              onChange={handleValues}
+            />
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              label="Нууц үг"
+              name="roomPassword"
+              type="password"
+              // error ={values.roomPassword.length === 0 ? true : false}
+              value={values.roomPassword}
               onChange={handleValues}
             />
             <Button
@@ -199,61 +188,15 @@ export default function LoginScreen(props) {
               variant="contained"
               color="primary"
               className={classes.submit}
-              onClick={loginHandle}
+              onClick={createHandle}
             >
-              Харилцах
+              Нээх
             </Button>
-            <Grid container>
-              <Grid item>
-                <Link onClick={() => history.push('/NewRoomScreen')}>
-                  Шинээр өрөө нээх
-                </Link>
-              </Grid>
-            </Grid>
           </form>
         </div>
       </Grid>
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        className={classes.modal}
-        open={open}
-        onClose={() => handleModal(false)}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={open}>
-          <div className={classes.paper1}>
-            <h2 id="transition-modal-title">Тухайн өрөө нь нууц үгээр хамгаалагдсан байна.</h2>
-            <TextField
-              variant="outlined"
-              margin="normal"
-              type="password"
-              required
-              fullWidth
-              label="Өрөөний нууц үг"
-              name="password"
-              value={values.password}
-              onChange={handleValues}
-            />
-            <Button
-              // type="submit"
-              fullWidth
-              variant="contained"
-              color="primary"
-              className={classes.submit}
-              onClick={loginHandle}
-            >
-              Confirm
-            </Button>
-          </div>
-        </Fade>
-      </Modal>
-      <MyAlert alert={alert} handleClose={handleAlertClose}/>
       <Watermark/>
+      <MyAlert alert={alert} handleClose={handleAlertClose}/>
     </Grid>
   );
 }
