@@ -4,8 +4,8 @@ public class CreateRoomDTO {
     private long id;
     private String roomName;
     private String roomPassword;
-    private int userLimit;
     private String username;
+    private int userLimit;
 
     public long getId() {
         return id;

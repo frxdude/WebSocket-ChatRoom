@@ -7,13 +7,12 @@
  */
 package com.cs314.lab3.Controller;
 
-import com.cs314.lab3.DTO.CreateRoomDTO;
-import com.cs314.lab3.DTO.JoinDTO;
-import com.cs314.lab3.DTO.JoinReturnDTO;
-import com.cs314.lab3.DTO.PassCheckDTO;
+import com.cs314.lab3.DTO.*;
 import com.cs314.lab3.Model.ChatMessage;
 import com.cs314.lab3.Model.Room;
+import com.cs314.lab3.Model.RoomHistory;
 import com.cs314.lab3.Model.RoomUser;
+import com.cs314.lab3.Repository.RoomHistoryRepository;
 import com.cs314.lab3.Repository.RoomRepository;
 import com.cs314.lab3.Repository.RoomUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -36,6 +36,8 @@ public class MainController {
     RoomRepository roomRepo;
     @Autowired
     RoomUserRepository roomUserRepo;
+    @Autowired
+    RoomHistoryRepository roomHisRepo;
 
     public static final int ROOM_CREATED = 1; // tested
     public static final int ROOM_DOESNT_EXIST = 2; // tested
@@ -52,7 +54,7 @@ public class MainController {
     @MessageMapping("/register/{roomName}")
     @SendTo("/cs314/{roomName}")
     public ChatMessage register(@Payload ChatMessage ch, SimpMessageHeaderAccessor headerAccessor
-            ,@DestinationVariable String roomName) {
+            , @DestinationVariable String roomName) {
         headerAccessor.getSessionAttributes().put("username", ch.getSender());
         return ch;
     }
@@ -61,6 +63,13 @@ public class MainController {
     @SendTo("/cs314/{roomName}")
     public ChatMessage sendMessage(@Payload ChatMessage ch, @DestinationVariable String roomName) {
         System.out.println("my message is here " + ch.getContent());
+        Room tempRoom = roomRepo.findByRoomName(roomName);
+        RoomUser theUser = roomUserRepo.isAvailableToJoin(ch.getSender(), tempRoom.getId());
+        RoomHistory tempHis = new RoomHistory();
+        tempHis.setDate(dtf.format(now));
+        tempHis.setRoomUserId(theUser.getId());
+        tempHis.setText(ch.getContent());
+        roomHisRepo.save(tempHis);
         return ch;
     }
 
@@ -105,7 +114,7 @@ public class MainController {
         room1.setCreatedUserId(roomUser.getId());
         roomRepo.save(room);
 
-        if(room1.getRoomPassword() != "" && room1.getRoomPassword() != null)
+        if (room1.getRoomPassword() != "" && room1.getRoomPassword() != null)
             responseData.setHasPassword(true);
         responseData.setLoggedIn(true);
         responseData.setMessage("Room created");
@@ -138,11 +147,9 @@ public class MainController {
         }
 
         String tempPasswordCheck = tempRoom.getRoomPassword();
-        if(tempPasswordCheck != "" && tempPasswordCheck != null)
-        {
-            Room tempRoomCheck = roomRepo.isPasswordCorrect(joinDTO.getPassword(),roomId);
-            if(tempRoomCheck == null)
-            {
+        if (tempPasswordCheck != "" && tempPasswordCheck != null) {
+            Room tempRoomCheck = roomRepo.isPasswordCorrect(joinDTO.getPassword(), roomId);
+            if (tempRoomCheck == null) {
                 responseData.setHasPassword(true);
                 responseData.setLoggedIn(false);
                 responseData.setMessage("Incorrect Password");
@@ -162,5 +169,21 @@ public class MainController {
         responseData.setMessageCode(NEW_USER);
         responseData.setLoggedIn(true);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
+    }
+
+    @GetMapping("/roomHistory/{roomName}")
+    public ResponseEntity<?> getRoomHistory(@PathVariable String roomName) {
+        List<RoomHistoryDTO> roomHisDTO = new ArrayList<>();
+        Room tempRoom = roomRepo.findByRoomName(roomName);
+        List<RoomHistory> roomHistories = roomHisRepo.getHistoryByRoomId(tempRoom.getId());
+        roomHistories.forEach(history -> {
+                RoomHistoryDTO temp = new RoomHistoryDTO();
+                temp.setMessage(history.getText());
+                temp.setSender(roomUserRepo.findById(history.getRoomUserId()).get().getUsername());
+                temp.setDate(history.getDate());
+                roomHisDTO.add(temp);
+            }
+        );
+        return new ResponseEntity<>(roomHisDTO,HttpStatus.OK);
     }
 }

@@ -20,7 +20,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WSConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/B180910040").withSockJS().setWebSocketEnabled(false);
+        registry.addEndpoint("/B180910040").withSockJS();
     }
 
     @Override
